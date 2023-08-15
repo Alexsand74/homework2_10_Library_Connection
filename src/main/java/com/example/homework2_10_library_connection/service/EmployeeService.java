@@ -14,34 +14,38 @@ import java.util.Map;
 @Service
 public class EmployeeService {
     private static final int LIMIT = 10;
-    private final Map<String, Employee> employees;
-    public EmployeeService() {
-        this.employees = new HashMap<>();
+    private final Map<String, Employee> employees = new HashMap<>();
+    private final ValidatorService validatorService;
+
+    public EmployeeService(ValidatorService validatorService) {
+        this.validatorService = validatorService;
     }
+
     public Employee addEmployee(String firstName, String lastName, int department, double salary) {
-        Employee employee = new Employee(firstName, lastName, department,salary);
-        String key = getKey(firstName,lastName);
+        Employee employee = validatorService.validateNameSurname(firstName, lastName, department, salary);
+        String key = getKey(employee.getName(), employee.getSurname());
         if (employees.containsKey(key)) {
             throw new EmployeeAlreadyAddedException();
         }
         if (employees.size() < LIMIT) {
-            employees.put(key,employee);
+            employees.put(key, employee);
             return employee;
         }
         throw new EmployeeStorageIsFullException();
     }
 
     public Employee findEmployee(String firstName, String lastName) {
-        String key = getKey(firstName,lastName);
+        String key = getKey(firstName, lastName);
         if (!employees.containsKey(key)) {
             throw new EmployeeNotFoundException();
         }
         return employees.get(key);
     }
+
     public Employee removeEmployee(String firstName, String lastName) {
-        String key = getKey(firstName,lastName);
+        String key = getKey(firstName, lastName);
         if (!employees.containsKey(key)) {
-                  throw new EmployeeNotFoundException();
+            throw new EmployeeNotFoundException();
         }
         return employees.remove(key);
     }
@@ -49,7 +53,8 @@ public class EmployeeService {
     public List<Employee> getAll() {
         return new ArrayList<>(employees.values());
     }
-    public String getKey (String firstName, String lastName){
-        return firstName+lastName;
+
+    public String getKey(String firstName, String lastName) {
+        return firstName + lastName;
     }
 }
